@@ -6086,6 +6086,7 @@ static int ixgbe_change_mtu(struct net_device *netdev, int new_mtu)
  * for transmit and receive operations are allocated, the interrupt
  * handler is registered with the OS, the watchdog timer is started,
  * and the stack is notified that the interface is ready.
+ * mark ixgbe_open
  **/
 int ixgbe_open(struct net_device *netdev)
 {

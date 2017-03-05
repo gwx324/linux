@@ -281,7 +281,7 @@ struct sk_buff_head {
 	/* These two members must be first. */
 	struct sk_buff	*next;
 	struct sk_buff	*prev;
-
+	/* 关联sk_buff链表结点数量。 ref: ULNI P.25*/
 	__u32		qlen;
 	spinlock_t	lock;
 };

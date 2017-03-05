@@ -80,7 +80,7 @@ static irqreturn_t dynapro_interrupt(struct serio *serio,
 {
 	struct dynapro *pdynapro = serio_get_drvdata(serio);
 
-	pdynapro->data[pdynapro->idx] = data;
+	`dynapro->data[pdynapro->idx] = data;
 
 	if (DYNAPRO_RESPONSE_BEGIN_BYTE & pdynapro->data[0])
 		dynapro_process_data(pdynapro);
