@@ -41,6 +41,16 @@ cifs_uniqueid_to_ino_t(u64 fileid)
 
 }
 
+static inline void cifs_set_time(struct dentry *dentry, unsigned long time)
+{
+	dentry->d_fsdata = (void *) time;
+}
+
+static inline unsigned long cifs_get_time(struct dentry *dentry)
+{
+	return (unsigned long) dentry->d_fsdata;
+}
+
 extern struct file_system_type cifs_fs_type;
 extern const struct address_space_operations cifs_addr_ops;
 extern const struct address_space_operations cifs_addr_ops_smallbuf;
@@ -73,7 +83,7 @@ extern int cifs_revalidate_dentry(struct dentry *);
 extern int cifs_invalidate_mapping(struct inode *inode);
 extern int cifs_revalidate_mapping(struct inode *inode);
 extern int cifs_zap_mapping(struct inode *inode);
-extern int cifs_getattr(struct vfsmount *, struct dentry *, struct kstat *);
+extern int cifs_getattr(const struct path *, struct kstat *, u32, unsigned int);
 extern int cifs_setattr(struct dentry *, struct iattr *);
 
 extern const struct inode_operations cifs_file_inode_ops;

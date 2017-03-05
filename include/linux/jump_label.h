@@ -21,6 +21,8 @@
  *
  * DEFINE_STATIC_KEY_TRUE(key);
  * DEFINE_STATIC_KEY_FALSE(key);
+ * DEFINE_STATIC_KEY_ARRAY_TRUE(keys, count);
+ * DEFINE_STATIC_KEY_ARRAY_FALSE(keys, count);
  * static_branch_likely()
  * static_branch_unlikely()
  *
@@ -87,11 +89,17 @@ extern bool static_key_initialized;
 
 struct static_key {
 	atomic_t enabled;
-/* Set lsb bit to 1 if branch is default true, 0 ot */
-	struct jump_entry *entries;
-#ifdef CONFIG_MODULES
-	struct static_key_mod *next;
-#endif
+/*
+ * bit 0 => 1 if key is initially true
+ *	    0 if initially false
+ * bit 1 => 1 if points to struct static_key_mod
+ *	    0 if points to struct jump_entry
+ */
+	union {
+		unsigned long type;
+		struct jump_entry *entries;
+		struct static_key_mod *next;
+	};
 };
 
 #else
@@ -116,9 +124,10 @@ struct module;
 
 #ifdef HAVE_JUMP_LABEL
 
-#define JUMP_TYPE_FALSE	0UL
-#define JUMP_TYPE_TRUE	1UL
-#define JUMP_TYPE_MASK	1UL
+#define JUMP_TYPE_FALSE		0UL
+#define JUMP_TYPE_TRUE		1UL
+#define JUMP_TYPE_LINKED	2UL
+#define JUMP_TYPE_MASK		3UL
 
 static __always_inline bool static_key_false(struct static_key *key)
 {
@@ -267,8 +276,24 @@ struct static_key_false {
 #define DEFINE_STATIC_KEY_TRUE(name)	\
 	struct static_key_true name = STATIC_KEY_TRUE_INIT
 
+#define DECLARE_STATIC_KEY_TRUE(name)	\
+	extern struct static_key_true name
+
 #define DEFINE_STATIC_KEY_FALSE(name)	\
 	struct static_key_false name = STATIC_KEY_FALSE_INIT
+
+#define DECLARE_STATIC_KEY_FALSE(name)	\
+	extern struct static_key_false name
+
+#define DEFINE_STATIC_KEY_ARRAY_TRUE(name, count)		\
+	struct static_key_true name[count] = {			\
+		[0 ... (count) - 1] = STATIC_KEY_TRUE_INIT,	\
+	}
+
+#define DEFINE_STATIC_KEY_ARRAY_FALSE(name, count)		\
+	struct static_key_false name[count] = {			\
+		[0 ... (count) - 1] = STATIC_KEY_FALSE_INIT,	\
+	}
 
 extern bool ____wrong_branch_error(void);
 
@@ -384,6 +409,6 @@ extern bool ____wrong_branch_error(void);
 #define static_branch_enable(x)		static_key_enable(&(x)->key)
 #define static_branch_disable(x)	static_key_disable(&(x)->key)
 
-#endif	/* _LINUX_JUMP_LABEL_H */
-
 #endif /* __ASSEMBLY__ */
+
+#endif	/* _LINUX_JUMP_LABEL_H */
